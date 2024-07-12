@@ -189,11 +189,25 @@ def normal_distribution(mu, sigma):
         sigma (float): Standard deviation.
 
     Returns:
-        function: Normal PDF function.
+        function: Normal PDF ( Probability Density Function ) function.
     """
     def pdf(x):
         return (1 / (sigma * math.sqrt(2 * math.pi))) * math.exp(-0.5 * ((x - mu) / sigma) ** 2)
     return pdf
+
+def normal_cdf(x, mu, sigma):
+    """
+    Generate a Normal distribution CDF (Cumulative Distribution Function).
+
+    Args:
+        x (float): Value at which to evaluate the CDF.
+        mu (float): Mean.
+        sigma (float): Standard deviation.
+
+    Returns:
+        float: CDF value.
+    """
+    return 0.5 * (1 + math.erf((x - mu) / (sigma * math.sqrt(2))))
 
 def beta_distribution(alpha, beta):
     """
@@ -204,7 +218,7 @@ def beta_distribution(alpha, beta):
         beta (float): Beta parameter.
 
     Returns:
-        function: Beta PDF function.
+        function: Beta PDF ( Probability Density Function ) function.
     """
     def pdf(x):
         if 0 <= x <= 1:
@@ -232,22 +246,43 @@ def plot_discrete_distribution(pmf, range_vals, title):
     plt.grid(True)
     plt.show()
 
-def plot_continuous_distribution(pdf, range_vals, title):
+def plot_continuous_distribution(pdf, cdf, mu, sigma, range_vals, title):
     """
-    Plot a continuous probability density function.
+    Plot a continuous probability density function and cumulative distribution function.
 
     Args:
         pdf (function): Probability density function.
+        cdf (function): Cumulative distribution function.
+        mu (float): Mean of the distribution.
+        sigma (float): Standard deviation of the distribution.
         range_vals (numpy.ndarray): Range of values.
         title (str): Title of the plot.
     """
-    probs = [pdf(x) for x in range_vals]
-    plt.bar(range_vals, probs)
-    plt.plot(range_vals, probs)
+    pdf_probs = [pdf(x) for x in range_vals]
+    cdf_probs = [cdf(x, mu, sigma) for x in range_vals]
+
+    plt.figure(figsize=(12, 6))
+
+    # Plot PDF
+    plt.subplot(1, 2, 1)
+    plt.fill_between(range_vals, pdf_probs, alpha=0.6, color='blue', label='PDF')
+    plt.plot(range_vals, pdf_probs, label='PDF', color='blue')
+    plt.title(f'{title} PDF')
     plt.xlabel('x')
     plt.ylabel('f(x)')
-    plt.title(title)
     plt.grid(True)
+    plt.legend()
+
+    # Plot CDF
+    plt.subplot(1, 2, 2)
+    plt.plot(range_vals, cdf_probs, label='CDF', color='red')
+    plt.title(f'{title} CDF')
+    plt.xlabel('x')
+    plt.ylabel('F(x)')
+    plt.grid(True)
+    plt.legend()
+
+    plt.tight_layout()
     plt.show()
 
 # 4. Expectation, Variance, and Covariance
@@ -419,6 +454,20 @@ def normal_pdf(x, mu, sigma):
     """
     return (1 / (sigma * math.sqrt(2 * math.pi))) * math.exp(-0.5 * ((x - mu) / sigma) ** 2)
 
+def normal_cdf(x, mu, sigma):
+    """
+    Calculate the CDF of a normal distribution.
+
+    Args:
+        x (float): Value at which to evaluate the CDF.
+        mu (float): Mean of the distribution.
+        sigma (float): Standard deviation of the distribution.
+
+    Returns:
+        float: CDF value.
+    """
+    return 0.5 * (1 + math.erf((x - mu) / (sigma * math.sqrt(2))))
+
 def plot_central_limit_theorem(sample_means):
     """
     Plot the Central Limit Theorem demonstration.
@@ -525,7 +574,7 @@ def main():
     print(f"Posterior Probability (Bayes' Theorem): {posterior:.4f}")
 
     # Example for Binomial Distribution
-    n = 10  # Example: number of trials
+    n = 100  # Example: number of trials
     pi = 0.5  # Example: probability of success on a single trial
 
     binom_dist = binomial_distribution(n, pi)
@@ -540,11 +589,11 @@ def main():
     sigma = 10  # Standard deviation
 
     norm_pdf = normal_distribution(mu, sigma)
-    exp_val = calc_expected_value(norm_pdf, is_continuous=True, lower_bound=-10, upper_bound=10)
-    var = calc_variance(norm_pdf, exp_val, is_continuous=True, lower_bound=-10, upper_bound=10)
+    exp_val = calc_expected_value(norm_pdf, is_continuous=True, lower_bound=140, upper_bound=220)
+    var = calc_variance(norm_pdf, exp_val, is_continuous=True, lower_bound=140, upper_bound=220)
     print(f"Normal Distribution - Expected Value: {exp_val}")
     print(f"Normal Distribution - Variance: {var}")
-    plot_continuous_distribution(norm_pdf, np.linspace(-10, 10, 1000), "Normal Distribution")
+    plot_continuous_distribution(norm_pdf, normal_cdf, mu, sigma, np.linspace(140, 220, 1000), "Normal Distribution")
 
     # Law of Large Numbers Demonstration
     norm_rv = lambda: np.random.normal(mu, sigma)
@@ -552,7 +601,7 @@ def main():
     plot_law_of_large_numbers(sample_means, mu)
 
     # Central Limit Theorem Demonstration
-    sample_means = central_limit_theorem(1000, 100, norm_rv)
+    sample_means = central_limit_theorem(10000, 1000, norm_rv)
     plot_central_limit_theorem(sample_means)
 
     # Linear Regression Example
